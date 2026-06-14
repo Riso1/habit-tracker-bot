@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "habit-tracker-notifier"
+version = "0.1.0"
+description = "Notification service for habit tracker"
+authors = ["Aleksandr <aleksandr@example.com>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pytelegrambotapi = "^4.26.0"
+requests = "^2.32.0"
+schedule = "^1.2.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
