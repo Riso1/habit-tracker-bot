@@ -96,3 +96,25 @@ def skip_habit(token: str, habit_id: int) -> dict[str, Any]:
     )
     response.raise_for_status()
     return response.json()
+
+def update_habit(token: str, habit_id: int, title: str) -> dict[str, Any]:
+    """Update user habit title."""
+    response = requests.patch(
+        f"{BACKEND_URL}/habits/{habit_id}",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"title": title},
+        timeout=10,
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def delete_habit(token: str, habit_id: int) -> None:
+    """Delete user habit."""
+    response = requests.delete(
+        f"{BACKEND_URL}/habits/{habit_id}",
+        headers={"Authorization": f"Bearer {token}"},
+        timeout=10,
+    )
+    response.raise_for_status()
+    
