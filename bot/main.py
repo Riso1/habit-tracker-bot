@@ -9,6 +9,7 @@ from api_client import (
     get_habits,
     get_token,
     register_user,
+    skip_habit,
 )
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -52,6 +53,7 @@ def handle_start(message: Message) -> None:
         "/habits — список привычек\n"
         "/add_habit — создать привычку\n"
         "/complete_habit — отметить выполнение",
+        "/skip_habit — отметить невыполнение",
     )
 
 
@@ -168,6 +170,46 @@ def process_complete_habit_id(message: Message) -> None:
     bot.send_message(
         message.chat.id,
         f"Привычка №{habit_id} отмечена как выполненная.",
+    )
+
+
+@bot.message_handler(commands=["skip_habit"])
+def handle_skip_habit(message: Message) -> None:
+    """Ask user for skipped habit ID."""
+    telegram_id = message.from_user.id
+
+    if telegram_id not in user_tokens:
+        bot.send_message(message.chat.id, "Сначала выполните /start.")
+        return
+
+    bot.send_message(message.chat.id, "Введите ID невыполненной привычки:")
+    bot.register_next_step_handler(message, process_skip_habit_id)
+
+
+def process_skip_habit_id(message: Message) -> None:
+    """Skip habit after ID input."""
+    telegram_id = message.from_user.id
+    token = user_tokens.get(telegram_id)
+
+    if token is None:
+        bot.send_message(message.chat.id, "Сначала выполните /start.")
+        return
+
+    if not message.text.isdigit():
+        bot.send_message(message.chat.id, "ID должен быть числом.")
+        return
+
+    habit_id = int(message.text)
+
+    try:
+        skip_habit(token, habit_id)
+    except Exception:
+        bot.send_message(message.chat.id, "Не удалось отметить привычку.")
+        return
+
+    bot.send_message(
+        message.chat.id,
+        f"Привычка №{habit_id} отмечена как невыполненная.",
     )
 
 
