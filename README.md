@@ -28,7 +28,7 @@ JWT_SECRET_KEY=your_random_secret_key
 
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(64))"
-````
+```
 
 3. Запустить проект:
 
