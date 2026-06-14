@@ -19,7 +19,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 if not BOT_TOKEN:
     raise RuntimeError("BOT_TOKEN environment variable is not set")
 
-bot = telebot.TeleBot(BOT_TOKEN)
+bot = telebot.TeleBot(BOT_TOKEN, parse_mode=None)
 
 user_tokens: dict[int, str] = {}
 
@@ -27,6 +27,21 @@ user_tokens: dict[int, str] = {}
 def build_user_password(telegram_id: int) -> str:
     """Build simple service password for Telegram user."""
     return f"telegram-{telegram_id}"
+
+
+def get_help_text() -> str:
+    """Return bot help text."""
+    return (
+        "Доступные команды:\n"
+        "/start — запуск бота\n"
+        "/help — список команд\n"
+        "/habits — список привычек\n"
+        "/add_habit — создать привычку\n"
+        "/complete_habit — отметить выполнение\n"
+        "/skip_habit — отметить невыполнение\n"
+        "/edit_habit — изменить привычку\n"
+        "/delete_habit — удалить привычку"
+    )
 
 
 @bot.message_handler(commands=["start"])
@@ -50,15 +65,14 @@ def handle_start(message: Message) -> None:
 
     bot.send_message(
         message.chat.id,
-        "Привет! Я бот для трекинга привычек.\n\n"
-        "Доступные команды:\n"
-        "/habits — список привычек\n"
-        "/add_habit — создать привычку\n"
-        "/complete_habit — отметить выполнение",
-        "/skip_habit — отметить невыполнение",
-        "/edit_habit — изменить привычку\n"
-        "/delete_habit — удалить привычку\n"
+        "Привет! Я бот для трекинга привычек.\n\n" + get_help_text(),
     )
+
+
+@bot.message_handler(commands=["help"])
+def handle_help(message: Message) -> None:
+    """Show available bot commands."""
+    bot.send_message(message.chat.id, get_help_text())
 
 
 @bot.message_handler(commands=["habits"])

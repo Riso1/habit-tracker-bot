@@ -35,8 +35,8 @@ services:
     env_file:
       - .env
     command: python main.py
-    volumes:
-      - ./bot:/code
+#    volumes:
+#      - ./bot:/code
     depends_on:
       - backend
 
@@ -47,8 +47,8 @@ services:
     env_file:
       - .env
     command: python main.py
-    volumes:
-      - ./notifier:/code
+#    volumes:
+#      - ./notifier:/code
     depends_on:
       - backend
 
