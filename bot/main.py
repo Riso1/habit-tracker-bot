@@ -86,7 +86,19 @@ def handle_habits(message: Message) -> None:
 
 @bot.message_handler(commands=["add_habit"])
 def handle_add_habit(message: Message) -> None:
-    """Add simple habit."""
+    """Ask user for habit title."""
+    telegram_id = message.from_user.id
+
+    if telegram_id not in user_tokens:
+        bot.send_message(message.chat.id, "Сначала выполните /start.")
+        return
+
+    bot.send_message(message.chat.id, "Введите название новой привычки:")
+    bot.register_next_step_handler(message, process_habit_title)
+
+
+def process_habit_title(message: Message) -> None:
+    """Create habit after title input."""
     telegram_id = message.from_user.id
     token = user_tokens.get(telegram_id)
 
@@ -94,18 +106,21 @@ def handle_add_habit(message: Message) -> None:
         bot.send_message(message.chat.id, "Сначала выполните /start.")
         return
 
+    habit_title = message.text.strip()
+
+    if not habit_title:
+        bot.send_message(message.chat.id, "Название привычки не может быть пустым.")
+        return
+
     try:
         habit = create_habit(
             token=token,
-            title="Новая привычка",
+            title=habit_title,
             description="Создана через Telegram",
             target_days=21,
         )
     except Exception:
-        bot.send_message(
-            message.chat.id,
-            "Не удалось создать привычку.",
-        )
+        bot.send_message(message.chat.id, "Не удалось создать привычку.")
         return
 
     bot.send_message(
