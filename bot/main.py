@@ -133,7 +133,19 @@ def process_habit_title(message: Message) -> None:
 
 @bot.message_handler(commands=["complete_habit"])
 def handle_complete_habit(message: Message) -> None:
-    """Complete first habit."""
+    """Ask user for completed habit ID."""
+    telegram_id = message.from_user.id
+
+    if telegram_id not in user_tokens:
+        bot.send_message(message.chat.id, "Сначала выполните /start.")
+        return
+
+    bot.send_message(message.chat.id, "Введите ID выполненной привычки:")
+    bot.register_next_step_handler(message, process_complete_habit_id)
+
+
+def process_complete_habit_id(message: Message) -> None:
+    """Complete habit after ID input."""
     telegram_id = message.from_user.id
     token = user_tokens.get(telegram_id)
 
@@ -141,18 +153,21 @@ def handle_complete_habit(message: Message) -> None:
         bot.send_message(message.chat.id, "Сначала выполните /start.")
         return
 
+    if not message.text.isdigit():
+        bot.send_message(message.chat.id, "ID должен быть числом.")
+        return
+
+    habit_id = int(message.text)
+
     try:
-        complete_habit(token, 1)
+        complete_habit(token, habit_id)
     except Exception:
-        bot.send_message(
-            message.chat.id,
-            "Не удалось отметить привычку.",
-        )
+        bot.send_message(message.chat.id, "Не удалось отметить привычку.")
         return
 
     bot.send_message(
         message.chat.id,
-        "Привычка №1 отмечена как выполненная.",
+        f"Привычка №{habit_id} отмечена как выполненная.",
     )
 
 
