@@ -21,7 +21,14 @@ Telegram-бот для трекинга привычек с backend-сервис
 
 ```env
 BOT_TOKEN=your_telegram_bot_token
+JWT_SECRET_KEY=your_random_secret_key
 ```
+
+`JWT_SECRET_KEY` должен быть случайной длинной строкой. Его можно сгенерировать командой:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(64))"
+````
 
 3. Запустить проект:
 
