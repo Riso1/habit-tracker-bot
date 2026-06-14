@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "habit-tracker-backend"
+version = "0.1.0"
+description = "FastAPI backend for habit tracker bot"
+authors = ["Aleksandr <aleksandr@example.com>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.115.0"
+uvicorn = "^0.34.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

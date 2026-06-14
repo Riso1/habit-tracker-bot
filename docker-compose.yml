@@ -1,0 +1,56 @@
+services:
+  db:
+    image: postgres:14.1-alpine
+    container_name: habits_postgres
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5433:5432"
+    volumes:
+      - habits_postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: habits_backend
+    restart: always
+    env_file:
+      - .env
+    command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+#    volumes:
+#      - ./backend:/code
+    depends_on:
+      - db
+
+  bot:
+    build: ./bot
+    container_name: habits_bot
+    restart: always
+    env_file:
+      - .env
+    command: python main.py
+    volumes:
+      - ./bot:/code
+    depends_on:
+      - backend
+
+  notifier:
+    build: ./notifier
+    container_name: habits_notifier
+    restart: always
+    env_file:
+      - .env
+    command: python main.py
+    volumes:
+      - ./notifier:/code
+    depends_on:
+      - backend
+
+volumes:
+  habits_postgres_data:
