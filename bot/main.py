@@ -3,7 +3,13 @@ import os
 import telebot
 from telebot.types import Message
 
-from api_client import get_habits, get_token, register_user
+from api_client import (
+    complete_habit,
+    create_habit,
+    get_habits,
+    get_token,
+    register_user,
+)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -43,7 +49,9 @@ def handle_start(message: Message) -> None:
         message.chat.id,
         "Привет! Я бот для трекинга привычек.\n\n"
         "Доступные команды:\n"
-        "/habits — список привычек",
+        "/habits — список привычек\n"
+        "/add_habit — создать привычку\n"
+        "/complete_habit — отметить выполнение",
     )
 
 
@@ -76,6 +84,62 @@ def handle_habits(message: Message) -> None:
     bot.send_message(message.chat.id, "\n".join(habit_lines))
 
 
+@bot.message_handler(commands=["add_habit"])
+def handle_add_habit(message: Message) -> None:
+    """Add simple habit."""
+    telegram_id = message.from_user.id
+    token = user_tokens.get(telegram_id)
+
+    if token is None:
+        bot.send_message(message.chat.id, "Сначала выполните /start.")
+        return
+
+    try:
+        habit = create_habit(
+            token=token,
+            title="Новая привычка",
+            description="Создана через Telegram",
+            target_days=21,
+        )
+    except Exception:
+        bot.send_message(
+            message.chat.id,
+            "Не удалось создать привычку.",
+        )
+        return
+
+    bot.send_message(
+        message.chat.id,
+        f"Привычка создана!\n"
+        f"ID: {habit['id']}\n"
+        f"Название: {habit['title']}",
+    )
+
+
+@bot.message_handler(commands=["complete_habit"])
+def handle_complete_habit(message: Message) -> None:
+    """Complete first habit."""
+    telegram_id = message.from_user.id
+    token = user_tokens.get(telegram_id)
+
+    if token is None:
+        bot.send_message(message.chat.id, "Сначала выполните /start.")
+        return
+
+    try:
+        complete_habit(token, 1)
+    except Exception:
+        bot.send_message(
+            message.chat.id,
+            "Не удалось отметить привычку.",
+        )
+        return
+
+    bot.send_message(
+        message.chat.id,
+        "Привычка №1 отмечена как выполненная.",
+    )
+
+
 if __name__ == "__main__":
     bot.infinity_polling()
-    

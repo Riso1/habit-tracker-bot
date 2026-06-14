@@ -53,3 +53,46 @@ def get_habits(token: str) -> list[dict[str, Any]]:
     )
     response.raise_for_status()
     return response.json()
+
+
+def create_habit(
+    token: str,
+    title: str,
+    description: str | None = None,
+    target_days: int = 21,
+) -> dict[str, Any]:
+    """Create user habit."""
+    response = requests.post(
+        f"{BACKEND_URL}/habits/",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": title,
+            "description": description,
+            "target_days": target_days,
+        },
+        timeout=10,
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def complete_habit(token: str, habit_id: int) -> dict[str, Any]:
+    """Mark habit as completed."""
+    response = requests.post(
+        f"{BACKEND_URL}/habits/{habit_id}/complete",
+        headers={"Authorization": f"Bearer {token}"},
+        timeout=10,
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def skip_habit(token: str, habit_id: int) -> dict[str, Any]:
+    """Mark habit as not completed."""
+    response = requests.post(
+        f"{BACKEND_URL}/habits/{habit_id}/skip",
+        headers={"Authorization": f"Bearer {token}"},
+        timeout=10,
+    )
+    response.raise_for_status()
+    return response.json()
