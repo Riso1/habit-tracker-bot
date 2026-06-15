@@ -3,13 +3,15 @@ import os
 import telebot
 from telebot.types import Message
 
-from api_client import (
+from storage.token_storage import get_user_token, init_token_storage
+
+from services.auth_service import authenticate_user
+
+from services.api_client import (
     complete_habit,
     create_habit,
     delete_habit,
     get_habits,
-    get_token,
-    register_user,
     skip_habit,
     update_habit,
 )
@@ -20,13 +22,6 @@ if not BOT_TOKEN:
     raise RuntimeError("BOT_TOKEN environment variable is not set")
 
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode=None)
-
-user_tokens: dict[int, str] = {}
-
-
-def build_user_password(telegram_id: int) -> str:
-    """Build simple service password for Telegram user."""
-    return f"telegram-{telegram_id}"
 
 
 def get_help_text() -> str:
@@ -49,19 +44,18 @@ def handle_start(message: Message) -> None:
     """Register user and save access token."""
     telegram_id = message.from_user.id
     username = message.from_user.username
-    password = build_user_password(telegram_id)
 
     try:
-        register_user(telegram_id, username, password)
-        token = get_token(telegram_id, username, password)
+        authenticate_user(
+            telegram_id,
+            username,
+        )
     except Exception:
         bot.send_message(
             message.chat.id,
             "Не удалось подключиться к сервису. Попробуйте позже.",
         )
         return
-
-    user_tokens[telegram_id] = token
 
     bot.send_message(
         message.chat.id,
@@ -79,7 +73,7 @@ def handle_help(message: Message) -> None:
 def handle_habits(message: Message) -> None:
     """Show current user habits."""
     telegram_id = message.from_user.id
-    token = user_tokens.get(telegram_id)
+    token = get_user_token(telegram_id)
 
     if token is None:
         bot.send_message(message.chat.id, "Сначала выполните команду /start.")
@@ -109,7 +103,7 @@ def handle_add_habit(message: Message) -> None:
     """Ask user for habit title."""
     telegram_id = message.from_user.id
 
-    if telegram_id not in user_tokens:
+    if get_user_token(telegram_id) is None:
         bot.send_message(message.chat.id, "Сначала выполните /start.")
         return
 
@@ -120,8 +114,7 @@ def handle_add_habit(message: Message) -> None:
 def process_habit_title(message: Message) -> None:
     """Create habit after title input."""
     telegram_id = message.from_user.id
-    token = user_tokens.get(telegram_id)
-
+    token = get_user_token(telegram_id)
     if token is None:
         bot.send_message(message.chat.id, "Сначала выполните /start.")
         return
@@ -156,7 +149,7 @@ def handle_complete_habit(message: Message) -> None:
     """Ask user for completed habit ID."""
     telegram_id = message.from_user.id
 
-    if telegram_id not in user_tokens:
+    if get_user_token(telegram_id) is None:
         bot.send_message(message.chat.id, "Сначала выполните /start.")
         return
 
@@ -167,8 +160,7 @@ def handle_complete_habit(message: Message) -> None:
 def process_complete_habit_id(message: Message) -> None:
     """Complete habit after ID input."""
     telegram_id = message.from_user.id
-    token = user_tokens.get(telegram_id)
-
+    token = get_user_token(telegram_id)
     if token is None:
         bot.send_message(message.chat.id, "Сначала выполните /start.")
         return
@@ -196,7 +188,7 @@ def handle_skip_habit(message: Message) -> None:
     """Ask user for skipped habit ID."""
     telegram_id = message.from_user.id
 
-    if telegram_id not in user_tokens:
+    if get_user_token(telegram_id) is None:
         bot.send_message(message.chat.id, "Сначала выполните /start.")
         return
 
@@ -207,8 +199,7 @@ def handle_skip_habit(message: Message) -> None:
 def process_skip_habit_id(message: Message) -> None:
     """Skip habit after ID input."""
     telegram_id = message.from_user.id
-    token = user_tokens.get(telegram_id)
-
+    token = get_user_token(telegram_id)
     if token is None:
         bot.send_message(message.chat.id, "Сначала выполните /start.")
         return
@@ -236,7 +227,7 @@ def handle_delete_habit(message: Message) -> None:
     """Ask user for deleted habit ID."""
     telegram_id = message.from_user.id
 
-    if telegram_id not in user_tokens:
+    if get_user_token(telegram_id) is None:
         bot.send_message(message.chat.id, "Сначала выполните /start.")
         return
 
@@ -247,8 +238,7 @@ def handle_delete_habit(message: Message) -> None:
 def process_delete_habit_id(message: Message) -> None:
     """Delete habit after ID input."""
     telegram_id = message.from_user.id
-    token = user_tokens.get(telegram_id)
-
+    token = get_user_token(telegram_id)
     if token is None:
         bot.send_message(message.chat.id, "Сначала выполните /start.")
         return
@@ -273,7 +263,7 @@ def handle_edit_habit(message: Message) -> None:
     """Ask user for habit edit data."""
     telegram_id = message.from_user.id
 
-    if telegram_id not in user_tokens:
+    if get_user_token(telegram_id) is None:
         bot.send_message(message.chat.id, "Сначала выполните /start.")
         return
 
@@ -288,8 +278,7 @@ def handle_edit_habit(message: Message) -> None:
 def process_edit_habit_data(message: Message) -> None:
     """Edit habit after user input."""
     telegram_id = message.from_user.id
-    token = user_tokens.get(telegram_id)
-
+    token = get_user_token(telegram_id)
     if token is None:
         bot.send_message(message.chat.id, "Сначала выполните /start.")
         return
@@ -325,4 +314,5 @@ def process_edit_habit_data(message: Message) -> None:
 
 
 if __name__ == "__main__":
+    init_token_storage()
     bot.infinity_polling()
