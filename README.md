@@ -33,7 +33,7 @@ python -c "import secrets; print(secrets.token_urlsafe(64))"
 3. Запустить проект:
 
 ```bash
-docker compose up --build
+docker compose up -d --build
 ```
 
 4. Применить миграции:
@@ -42,13 +42,13 @@ docker compose up --build
 docker exec -it habits_backend alembic upgrade head
 ```
 
-## Backend
-
-Документация API:
+5. Открыть Swagger:
 
 ```text
 http://127.0.0.1:8000/docs
 ```
+
+## Backend
 
 Проверка сервиса:
 
@@ -94,6 +94,20 @@ http://127.0.0.1:8000/health
 - `/skip_habit` — отметить невыполнение;
 - `/edit_habit` — изменить привычку;
 - `/delete_habit` — удалить привычку.
+
+Архитектура Telegram-бота:
+
+```text
+bot/
+├── main.py              # точка входа
+├── handlers/            # обработчики команд
+│   ├── common.py
+│   └── habits.py
+├── config/              # настройки приложения
+├── services/            # работа с backend API и бизнес-логика
+├── storage/             # хранение токенов пользователей
+└── token_storage.db     # SQLite база бота
+```
 
 ### Notifier
 
@@ -155,11 +169,10 @@ Bearer <access_token>
 
 При обращении к API:
 
-1. Бот получает токен из SQLite;
-2. Выполняет запрос к backend;
-3. Если backend возвращает `401 Unauthorized`, бот автоматически получает новый JWT через `/auth/token`;
-4. Новый токен сохраняется в SQLite;
-5. Запрос выполняется повторно.
+1. Бот получает JWT-токен из SQLite.
+2. Выполняет запрос к backend.
+3. При необходимости бот может получить новый JWT через эндпоинт `/auth/token`.
+4. Новый токен сохраняется в SQLite и используется для последующих запросов.
 
 ---
 
